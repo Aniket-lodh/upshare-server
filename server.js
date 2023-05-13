@@ -1,8 +1,11 @@
 import mongoose from "mongoose";
 import chalk from "chalk";
 import dotenv from "dotenv";
-import app  from "./index.js";
+import express from "express";
+import App from "./index.js";
 
+const app = express();
+app.use(App);
 dotenv.config();
 
 // New database connection
@@ -10,17 +13,6 @@ const URI = process.env.MONGODB_CON_URL.replace(
   "<PASSWORD>",
   process.env.ATLAS_UPSHARE_PASS
 );
-// mongoose
-//   .connect(URI, {
-//     serverSelectionTimeoutMS: 5000,
-//     useNewUrlParser: true,
-//   })
-//   .then(() => console.log(chalk.blueBright("Successfully connected to DB 🗃")))
-//   .catch((err) =>
-//     console.error(
-//       chalk.redBright(`Error while connecting to database.\n Err:: ${err}`)
-//     )
-//   );
 
 const connectDB = async () => {
   try {
@@ -33,7 +25,9 @@ const connectDB = async () => {
         )
       );
   } catch (err) {
-    console.log(err);
+    console.error(
+      chalk.redBright(`Error while connecting to database.\n Err:: ${err}`)
+    );
     process.exit(1);
   }
 };
