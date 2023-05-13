@@ -4,12 +4,8 @@
   "description": "a web app server for the upshare website",
   "main": "index.js",
   "type": "module",
-  "engines": {
-    "node": "14.x"
-  },
   "scripts": {
-    "start": "node server.js",
-    "test": "nodemon server.js"
+    "start": "node server.js"
   },
   "author": "Aniket lodh",
   "license": "ISC",
