@@ -5,7 +5,7 @@ import usersRouter from "./routes/userRoutes.js";
 import vehicleRoutes from "./routes/vehicleRoutes.js";
 import GlobalErrorHandler from "./handler/globalErrorHandler.js";
 
-export const app = express();
+const app = express();
 
 app.use(cors());
 app.use(cookieParser());
@@ -23,3 +23,4 @@ app.use("/users", usersRouter);
 app.use("/vehicles", vehicleRoutes);
 
 app.use(GlobalErrorHandler);
+export default app;

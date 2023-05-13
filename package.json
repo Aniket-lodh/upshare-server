@@ -2,7 +2,7 @@
   "name": "upshare-server",
   "version": "1.0.0",
   "description": "a web app server for the upshare website",
-  "main": "index.js",
+  "main": "server.js",
   "type": "module",
   "scripts": {
     "start": "node server.js"
