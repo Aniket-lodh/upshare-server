@@ -1,0 +1,11 @@
+{
+    "version": 0.1,
+    "name": "Upshare-server",
+    "builds": [
+      { "src": "server.js", "use": "@vercel/node" }
+    ],
+    "routes": [
+      { "src": "/(.*)", "dest": "/index.js" }
+    ]
+  }
+  
