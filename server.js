@@ -6,8 +6,12 @@ import app from "./index.js";
 dotenv.config();
 
 // New database connection
+const URI = process.env.MONGODB_CON_URL.replace(
+  "<PASSWORD>",
+  process.env.ATLAS_UPSHARE_PASS
+);
 mongoose
-  .connect(process.env.MONGODB_CON_URL, {
+  .connect(URI, {
     serverSelectionTimeoutMS: 5000,
     useNewUrlParser: true,
   })
