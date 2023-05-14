@@ -3,7 +3,7 @@ import chalk from "chalk";
 import dotenv from "dotenv";
 import app from "./index.js";
 
-dotenv.config();
+dotenv.config({ path: "./config.env" });
 
 const connectDB = async () => {
   // New database connection
@@ -11,7 +11,7 @@ const connectDB = async () => {
     "<PASSWORD>",
     process.env.ATLAS_UPSHARE_PASS
   );
-
+  console.log(URI);
   try {
     mongoose.set("strictQuery", false);
     mongoose
