@@ -1,32 +1,53 @@
-import cors from "cors";
-import express from "express";
-import cookieParser from "cookie-parser";
-import compression from "compression";
-import usersRouter from "./routes/userRoutes.js";
-import vehicleRoutes from "./routes/vehicleRoutes.js";
-import GlobalErrorHandler from "./handler/globalErrorHandler.js";
+import mongoose from "mongoose";
+import chalk from "chalk";
+import dotenv from "dotenv";
+import app from "./app.js";
 
-const app = express();
+dotenv.config({ path: "./config.env" });
 
-app.use(cors());
-app.use(cookieParser());
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
-app.use(
-  compression({
-    threshold: 0, //Compresses all responses regardless of their size
-  })
+const connectDB = async () => {
+  // New database connection
+  const URI = process.env.MONGODB_CON_URL.replace(
+    "<PASSWORD>",
+    process.env.ATLAS_UPSHARE_PASS
+  );
+  console.log(URI);
+  try {
+    mongoose.set("strictQuery", false);
+    mongoose
+      .connect(URI, {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+      })
+      .then((conn) =>
+        console.log(
+          chalk.blueBright("Successfully connected to DB 🗃"),
+          conn.connection.host
+        )
+      );
+  } catch (err) {
+    console.error(
+      chalk.redBright(`Error while connecting to database.\n Err:: ${err}`)
+    );
+    process.exit(1);
+  }
+};
+
+//SERVER
+const port = process.env.PORT || 2408;
+var server;
+
+connectDB().then(
+  () =>
+    (server = app.listen(port, () =>
+      console.log(chalk.hex("#FFA500").bold(`Listening on port ${port} 🚀`))
+    ))
 );
 
-app.get("/", (req, res, next) => {
-  res.status(200).send({
-    message: "You have encountered Upshare Backend Server.",
+process.on("unhandledRejection", (err) => {
+  console.log(chalk.bgRedBright("UNHANDLED REJECTION! 💥 Shutting down..."));
+  console.error(`${err.name}=> ${err.message}`);
+  server.close(() => {
+    process.exit(1);
   });
 });
-
-// ROUTES
-app.use("/users", usersRouter);
-app.use("/vehicles", vehicleRoutes);
-
-app.use(GlobalErrorHandler);
-export default app;
