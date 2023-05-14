@@ -1,22 +1,20 @@
 import mongoose from "mongoose";
 import chalk from "chalk";
 import dotenv from "dotenv";
-import express from "express";
-import App from "./index.js";
+import app from "./index.js";
 
-const app = express();
-app.use(App);
 dotenv.config();
 
-// New database connection
-const URI = process.env.MONGODB_CON_URL.replace(
-  "<PASSWORD>",
-  process.env.ATLAS_UPSHARE_PASS
-);
-
 const connectDB = async () => {
+  // New database connection
+  const URI = process.env.MONGODB_CON_URL.replace(
+    "<PASSWORD>",
+    process.env.ATLAS_UPSHARE_PASS
+  );
+
   try {
-    mongoose
+    mongoose.set("strictQuery", false);
+    await mongoose
       .connect(URI)
       .then((conn) =>
         console.log(

@@ -13,11 +13,11 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
 app.get("/", (req, res, next) => {
-  console.log("Home route");
   res.status(200).send({
     message: "You have encountered Upshare Backend Server.",
   });
 });
+
 // ROUTES
 app.use("/users", usersRouter);
 app.use("/vehicles", vehicleRoutes);
