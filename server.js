@@ -14,8 +14,11 @@ const connectDB = async () => {
 
   try {
     mongoose.set("strictQuery", false);
-    await mongoose
-      .connect(URI)
+    mongoose
+      .connect(URI, {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+      })
       .then((conn) =>
         console.log(
           chalk.blueBright("Successfully connected to DB 🗃"),
