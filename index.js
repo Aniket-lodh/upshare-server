@@ -11,8 +11,12 @@ const app = express();
 app.use(cors());
 app.use(cookieParser());
 app.use(express.json());
-app.use(compression());
 app.use(express.urlencoded({ extended: false }));
+app.use(
+  compression({
+    threshold: 0, //Compresses all responses regardless of their size
+  })
+);
 
 app.get("/", (req, res, next) => {
   res.status(200).send({
