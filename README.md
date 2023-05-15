@@ -1,6 +1,4 @@
 <h1 class="code-line" data-line-start=0 data-line-end=1 ><a id="Upshare_Server_0"></a>Upshare Server</h1>
-<p class="has-line-data" data-line-start="2" data-line-end="3"><a href="https://nodesource.com/products/nsolid"><img src="https://cldup.com/dTxpPi9lDf.thumb.png" alt="N|Solid"></a></p>
-<p class="has-line-data" data-line-start="4" data-line-end="5"><a href="https://travis-ci.org/joemccann/dillinger"><img src="https://travis-ci.org/joemccann/dillinger.svg?branch=master" alt="Build Status"></a></p>
 <p class="has-line-data" data-line-start="6" data-line-end="7">Upshare is a website designed for users to share their thoughts and promote their content. This repository contains the server-side code for Upshare.</p>
 <h2 class="code-line" data-line-start=8 data-line-end=9 ><a id="Technologies_Used_8"></a>Technologies Used</h2>
 <p class="has-line-data" data-line-start="10" data-line-end="11">The Upshare server is built using Node.js and Express.js, and uses a MongoDB database to store user information and content. The server implements a RESTful API that allows users to create, read, update, and delete their posts.</p>
