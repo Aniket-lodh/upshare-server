@@ -11,7 +11,6 @@ const connectDB = async () => {
     "<PASSWORD>",
     process.env.ATLAS_UPSHARE_PASS
   );
-  console.log(URI);
   try {
     mongoose.set("strictQuery", false);
     mongoose
