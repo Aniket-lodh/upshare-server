@@ -44,8 +44,8 @@ connectDB().then(
 );
 
 process.on("unhandledRejection", (err) => {
-  console.log(chalk.bgRedBright("UNHANDLED REJECTION! 💥 Shutting down..."));
-  console.error(`${err.name}=> ${err.message}`);
+  // console.log(chalk.bgRedBright("UNHANDLED REJECTION! 💥 Shutting down..."));
+  // console.error(`${err.name}=> ${err.message}`);
   server.close(() => {
     process.exit(1);
   });
