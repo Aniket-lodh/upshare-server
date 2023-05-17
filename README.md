@@ -9,7 +9,7 @@
 <li class="has-line-data" data-line-start="16" data-line-end="18"><a href="https://helmetjs.github.io/">Helmet.js</a>: middleware for securing HTTP headers.</li>
 </ul>
 <h2 class="code-line" data-line-start=18 data-line-end=19 ><a id="Getting_Started_18"></a>Getting Started</h2>
-<p class="has-line-data" data-line-start="20" data-line-end="21">Dillinger requires <a href="https://nodejs.org/">Node.js</a> v14+ to run.</p>
+<p class="has-line-data" data-line-start="20" data-line-end="21">Upshare Server requires <a href="https://nodejs.org/">Node.js</a> v14+ to run.</p>
 <p class="has-line-data" data-line-start="23" data-line-end="25">To get started with the Upshare server, follow these steps:<br>
 Clone this repository to your local machine:</p>
 <pre><code class="has-line-data" data-line-start="27" data-line-end="29" class="language-sh">git <span class="hljs-built_in">clone</span> https://github.com/Aniket-lodh/upshare-server.git
