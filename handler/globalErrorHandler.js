@@ -41,11 +41,25 @@ const castErrors = async function (error, res) {
     },
   });
 };
+const tokenExpiredErrors = async function (error, res) {
+  error.expiredAt = new Date(error.expiredAt).toLocaleString();
+  res.status(error.statusCode).send({
+    status: error.status,
+    code: error.statusCode,
+    errors: {
+      name: error.name,
+      message: error.message,
+      expiredAt: error.expiredAt,
+    },
+  });
+};
 const globalErrorHandler = async function (error, req, res, next) {
   error.status = error.status || "Error";
   error.statusCode = error.statusCode || 500;
 
-  if (error.name === "ValidationError") {
+  if (error.name == "TokenExpiredError") {
+    tokenExpiredErrors(error, res);
+  } else if (error.name === "ValidationError") {
     validationErrors(error, res);
   } else if (error.name === "Error") {
     fieldErrors(error, res);
@@ -53,13 +67,8 @@ const globalErrorHandler = async function (error, req, res, next) {
     duplicateErrors(error, res);
   } else if (error.name === "CastError") {
     castErrors(error, res);
-  } else {
-    console.log(error);
-    res.status(500).send({
-      status: "Internal Error",
-      code: 500,
-      message: "Internal server error occurred",
-    });
   }
+  // print unCaught errors
+  console.log(error);
 };
 export default globalErrorHandler;

@@ -8,18 +8,21 @@ import GlobalErrorHandler from "./handler/globalErrorHandler.js";
 
 const app = express();
 
-app.use(cors());
+const corsOptions = {
+  credentials: true,
+  origin: ["http://localhost:5000", "https://up-share.vercel.app"],
+  optionSuccessStatus: 200,
+};
+
+app.use(cors(corsOptions));
 app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(
   compression({
-    threshold: 0, //Compresses all responses regardless of their size
+    threshold: 0, // Compresses all responses regardless of their size
   })
 );
-
-
-
 
 app.get("/", (req, res, next) => {
   res.status(200).send({
