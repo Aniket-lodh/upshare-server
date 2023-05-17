@@ -24,8 +24,8 @@ export const getUser = CatchAsync(async (req, res, next) => {
   const user_profile = await UserModule.findById(req.params.id);
   if (!user_profile)
     return next(new ServeError("The user doesnot exist.", 401));
-  user_profile.__v=undefined;
-  
+  user_profile.__v = undefined;
+
   res.status(200).send({
     status: 200,
     message: "User profile found",
@@ -63,7 +63,7 @@ export const loginUser = CatchAsync(async (req, res, next) => {
   else if (!(await user.correctPassword(passcode, user.passcode)))
     //TODO: work on the userSchema method
     return next(new ServeError("Email or Password is invalid.", 401));
-
+  user.passcode = undefined;
   CreateJwtToken(user, res, 200);
 });
 

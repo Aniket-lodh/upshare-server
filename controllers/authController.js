@@ -36,7 +36,9 @@ export const CreateJwtToken = async function (user, res, statusCode) {
 
   res.cookie("token", jwt, cookieOptions); //Stores token in cookie
 
-  res.status(statusCode).send({ status: "success", data: { jwt } });
+  res
+    .status(statusCode)
+    .send({ status: "success", code: statusCode, data: { user } });
 };
 
 export const protect = catchAsync(async (req, res, next) => {
