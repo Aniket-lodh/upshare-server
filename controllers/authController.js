@@ -28,17 +28,17 @@ export const CreateJwtToken = async function (user, res, statusCode) {
     sameSite: "none",
   };
   // Sets the origin of the website which will be access credentials
+  res.setHeader("Access-Control-Allow-Credentials", true);
   res.setHeader(
     "Access-Control-Allow-Headers",
     "Origin, X-Requested-With, Accept"
   );
-  res.setHeader("Access-Control-Allow-Credentials", true);
 
   res.cookie("token", jwt, cookieOptions); //Stores token in cookie
 
   res
     .status(statusCode)
-    .send({ status: "success", code: statusCode, data: { user } });
+    .send({ status: "success", code: statusCode, data: { jwt } });
 };
 
 export const protect = catchAsync(async (req, res, next) => {
