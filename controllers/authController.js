@@ -35,7 +35,7 @@ export const CreateJwtToken = async function (user, res, statusCode) {
   );
 
   res.cookie("token", jwt, cookieOptions); //Stores token in cookie
-
+  console.log(jwt);
   res
     .status(statusCode)
     .send({ status: "success", code: statusCode, data: { jwt } });

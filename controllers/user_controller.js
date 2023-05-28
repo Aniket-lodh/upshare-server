@@ -118,7 +118,7 @@ export const updateProfileImage = CatchAsync(async (req, res, next) => {
       res.status(200).send({
         status: "success",
         code: 200,
-        message: "Profile updated Successfully",
+        message: "Image successfully uploaded.",
       });
     } else {
       return next(new ServeError("Problem Uploading data", 500));
@@ -135,11 +135,19 @@ export const updateProfile = CatchAsync(async (req, res, next) => {
         location: `${req.body.country}, ${req.body.state}`,
       },
     });
-    if (updatedProfile) createAccessToken(req.user, res, 201);
-    else
+    if (updatedProfile) {
+      res.status(200).send({
+        status: "success",
+        code: 200,
+        message: "Profile Update Successfully",
+      });
+    } else {
+      console.log("err in profile update");
+      console.log(updatedProfile);
       return next(
         new ServeError("Couldnot update profile. Please try again later!", 500)
       );
+    }
   } else {
     return next(new ServeError("The user doesnot exist", 404));
   }
