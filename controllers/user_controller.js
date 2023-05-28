@@ -2,7 +2,7 @@ import { ObjectId } from "mongodb";
 import { user as UserModule, user } from "../models/user_model.js";
 import CatchAsync from "../utils/catchAsync.js";
 import ServeError from "../utils/ServeError.js";
-import { CreateJwtToken } from "./authController.js";
+import { CreateJwtToken, createAccessToken } from "./authController.js";
 import { upload } from "../utils/MulterStorage.js";
 
 /**
@@ -135,13 +135,7 @@ export const updateProfile = CatchAsync(async (req, res, next) => {
         location: `${req.body.country}, ${req.body.state}`,
       },
     });
-    if (updatedProfile)
-      res.status(200).send({
-        status: "success",
-        code: 200,
-        message: "Profile updated Successfully",
-        data: updatedProfile,
-      });
+    if (updatedProfile) createAccessToken(req.user, res, 201);
     else
       return next(
         new ServeError("Couldnot update profile. Please try again later!", 500)
