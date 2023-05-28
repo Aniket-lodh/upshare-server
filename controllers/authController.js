@@ -77,6 +77,7 @@ export const verifyToken = async (req, res, next) => {
     });
   }
 };
+
 export const verifyUser = async (req, res, next) => {
   try {
     const user = await promisify(jwt.verify)(

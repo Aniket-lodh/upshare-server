@@ -1,10 +1,10 @@
 import { ObjectId } from "mongodb";
-import { user as UserModule } from "../models/user_model.js";
-import getErrors from "../utils/elog.js";
-import { createAccessToken } from "./authController.js";
+import { user as UserModule, user } from "../models/user_model.js";
 import CatchAsync from "../utils/catchAsync.js";
 import ServeError from "../utils/ServeError.js";
 import { CreateJwtToken } from "./authController.js";
+import { upload } from "../utils/MulterStorage.js";
+
 /**
  * Get all available users from the database
  * @returns available users if exists in the database else err message.
@@ -94,36 +94,62 @@ export const createUser = CatchAsync(async (req, res, next) => {
  * @param req.params.id for verification match if the given id and the token id matches or not
  * @returns id of the user.
  **/
-export const updateUser = async (req, res) => {
-  if (JSON.stringify(req.params.id) !== JSON.stringify(res.user._id)) {
-    return res
-      .status(401)
-      .send({ status: 401, message: "Invalid user", data: null });
-  }
-
-  req.body.username ? (res.user.username = req.body.username) : "";
-  req.body.gender ? (res.user.gender = req.body.gender) : "";
-  req.body.email ? (res.user.email = req.body.email) : "";
-  req.body.phone ? (res.user.phone = req.body.phone) : "";
-  req.body.passcode ? (res.user.passcode = req.body.passcode) : "";
-  req.body.address ? (res.user.address = req.body.address) : "";
-
-  res.user.updatedAt = new Date();
-  try {
-    await res.user.save(function (error, _document) {
-      //check for errors
-      let resp = getErrors(error);
-      //Send Errors to browser
-      resp.status === 200 ? (resp._id = _document._id) : "";
-      resp.status === 200
-        ? (resp.message = "No Errors found, Updated successfully")
-        : resp.message;
-      res.status(resp.status).send(resp);
+export const updateProfileImage = CatchAsync(async (req, res, next) => {
+  if (req.files && req.files.length >= 1) {
+    const url = [];
+    req.files.map((file, i) => {
+      url.push(
+        `${req.protocol}://${req.hostname}/upload/users/${req.user.id}/${file.filename}`
+      );
     });
-  } catch (err) {
-    res.status(500).send({ message: err.message });
+    const user = await UserModule.findByIdAndUpdate(
+      {
+        _id: req.user._id,
+      },
+      {
+        $set: {
+          profilephoto: url[0],
+          coverphoto: url[1],
+        },
+      },
+      { new: true }
+    );
+    if (user) {
+      res.status(200).send({
+        status: "success",
+        code: 200,
+        message: "Profile updated Successfully",
+      });
+    } else {
+      return next(new ServeError("Problem Uploading data", 500));
+    }
   }
-};
+});
+
+export const updateProfile = CatchAsync(async (req, res, next) => {
+  const user = await UserModule.findById(req.user._id);
+  if (user) {
+    const updatedProfile = await user.updateOne({
+      $set: {
+        ...req.body,
+        location: `${req.body.country}, ${req.body.state}`,
+      },
+    });
+    if (updatedProfile)
+      res.status(200).send({
+        status: "success",
+        code: 200,
+        message: "Profile updated Successfully",
+        data: updatedProfile,
+      });
+    else
+      return next(
+        new ServeError("Couldnot update profile. Please try again later!", 500)
+      );
+  } else {
+    return next(new ServeError("The user doesnot exist", 404));
+  }
+});
 
 /**
  * deletes an user
@@ -140,3 +166,22 @@ export const deleteUser = async (req, res) => {
     res.status(500).send({ status: 500, message: err.message, data: null });
   }
 };
+
+export const followUser = CatchAsync(async (req, res, next) => {
+  // TODO: work on not storing the user id if it already exists
+  const user = await UserModule.findByIdAndUpdate(
+    { _id: req.params.id, followers: { _id: { $ne: req.user._id } } },
+    { $push: { followers: { _id: req.user._id } } },
+    { new: true }
+  );
+  if (!user) {
+    return next(new ServeError("The following user no longer exists!", 500));
+  }
+  const curUser = await UserModule.findByIdAndUpdate(
+    { _id: req.user._id, following: { _id: { $ne: user._id } } },
+    { $push: { following: { _id: user._id } } },
+    { new: true }
+  );
+
+  res.send(curUser);
+});

@@ -12,11 +12,12 @@ const connectDB = async () => {
     process.env.ATLAS_UPSHARE_PASS
   );
   try {
-    mongoose.set("strictQuery", false);
-    mongoose
+    await mongoose
+      .set("strictQuery", false)
       .connect(URI, {
         useNewUrlParser: true,
         useUnifiedTopology: true,
+        connectTimeoutMS: 5000,
       })
       .then((conn) =>
         console.log(
@@ -26,8 +27,9 @@ const connectDB = async () => {
       );
   } catch (err) {
     console.error(
-      chalk.redBright(`Error while connecting to database.\n Err:: ${err}`)
+      chalk.magentaBright(`Error while connecting to database.\nErr:: ${err.message}`)
     );
+    
     process.exit(1);
   }
 };

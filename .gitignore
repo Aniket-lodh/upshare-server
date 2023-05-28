@@ -6,6 +6,7 @@ yarn-error.log
 # IDEs and editors
 .vscode/
 .idea/
+public/*
 *.sublime-project
 *.sublime-workspace
 

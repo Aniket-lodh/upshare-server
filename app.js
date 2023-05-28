@@ -5,6 +5,7 @@ import compression from "compression";
 import usersRouter from "./routes/userRoutes.js";
 import vehicleRoutes from "./routes/vehicleRoutes.js";
 import GlobalErrorHandler from "./handler/globalErrorHandler.js";
+import bodyParser from "body-parser";
 
 const app = express();
 
@@ -14,10 +15,12 @@ const corsOptions = {
   optionSuccessStatus: 200,
 };
 
+app.use(bodyParser.json({ limit: "50mb" }));
+app.use(bodyParser.urlencoded({ limit: "50mb", extended: true }));
+app.use(express.urlencoded({ limit: "50mb", extended: true }));
 app.use(cors(corsOptions));
+app.use(express.static("public"));
 app.use(cookieParser());
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
 app.use(
   compression({
     threshold: 0, // Compresses all responses regardless of their size

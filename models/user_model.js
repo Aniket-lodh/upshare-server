@@ -26,12 +26,22 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: "userAvatar.jpg",
     },
+    coverphoto: {
+      type: String,
+      default: "userCoverPhoto.jpg",
+    },
     profession: {
       type: "String",
+      default: "",
     },
     bio: {
       type: "string",
       maxlength: [150, "Max length reached!"],
+      default: "",
+    },
+    website: {
+      type: "String",
+      default: "",
     },
     gender: {
       type: String,
@@ -50,8 +60,19 @@ const userSchema = new mongoose.Schema(
       minlength: [10, "Minimum length 10"],
       maxlength: [10, "Maximum length 10"],
     },
+    country: {
+      type: String,
+      default: "",
+      select: false, //hides the country
+    },
+    state: {
+      type: String,
+      default: "",
+      select: false, //hides the state
+    },
     location: {
       type: String,
+      default: "",
     },
     passcode: {
       type: String,
@@ -75,15 +96,15 @@ const userSchema = new mongoose.Schema(
     },
     likes: {
       type: Array,
-      default: undefined,
+      default: [],
     },
-    Followers: {
+    followers: {
       type: Array,
-      default: undefined,
+      default: [],
     },
-    Following: {
+    following: {
       type: Array,
-      default: undefined,
+      default: [],
     },
     //   listings: {
     //     type: [ObjectId],
@@ -104,7 +125,7 @@ const userSchema = new mongoose.Schema(
 
 userSchema.pre("save", async function (next) {
   this.passcode = await bcrypt.hash(this.passcode, 10);
-  //   delete password confirm
+  //delete the fields
   this.passcodeConfirm = undefined;
   next();
 });
