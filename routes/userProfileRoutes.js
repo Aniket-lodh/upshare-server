@@ -7,13 +7,12 @@ import {
   followUser,
   updateProfileImage,
 } from "../controllers/user_controller.js";
-import { upload } from "../utils/MulterStorage.js";
 
 const router = express.Router();
 
 router
   .route("/upload")
-  .patch(protect, upload.array("images", 2), updateProfileImage);
+  .patch(protect, updateProfileImage);
 
 router.route("/me").get(protect, getProfile);
 

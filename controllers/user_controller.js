@@ -4,6 +4,7 @@ import CatchAsync from "../utils/catchAsync.js";
 import ServeError from "../utils/ServeError.js";
 import { CreateJwtToken, createAccessToken } from "./authController.js";
 import { upload } from "../utils/MulterStorage.js";
+import multer from "multer";
 
 /**
  * Get all available users from the database
@@ -94,36 +95,63 @@ export const createUser = CatchAsync(async (req, res, next) => {
  * @param req.params.id for verification match if the given id and the token id matches or not
  * @returns id of the user.
  **/
+// TODO: FIX the edit section part, where it gets stuck
 export const updateProfileImage = CatchAsync(async (req, res, next) => {
-  if (req.files && req.files.length >= 1) {
-    const url = [];
-    req.files.map((file, i) => {
-      url.push(
-        `${req.protocol}://${req.hostname}/upload/users/${req.user.id}/${file.filename}`
-      );
-    });
-    const user = await UserModule.findByIdAndUpdate(
-      {
-        _id: req.user._id,
-      },
-      {
-        $set: {
-          profilephoto: url[0],
-          coverphoto: url[1],
+  upload(req, res, async function (err) {
+    if (err instanceof multer.MulterError) {
+      //A multer error occurred when uploading.
+      return next(new ServeError("Multer Error Uploading.", 500));
+    } else if (err) {
+      // An unknown error occurred when uploading.
+      if (err.name == "ExtensionError") {
+        return next(new ServeError(err.message, 413));
+      } else {
+        return next(
+          new ServeError(`Unknown uploading error: ${err.message}`, 500)
+        );
+      }
+    }
+
+    if (req.files && req.files.length >= 1) {
+      const url = [];
+      req.files.map((file, i) => {
+        url.push(
+          `${req.protocol}://${req.hostname}/upload/users/${req.user.id}/${file.filename}`
+        );
+      });
+      // console.log(url);
+
+      const user = await UserModule.findByIdAndUpdate(
+        {
+          _id: req.user._id,
         },
-      },
-      { new: true }
-    );
-    if (user) {
+        {
+          $set: {
+            profilephoto: url[0],
+            coverphoto: url[1],
+          },
+        },
+        { new: true }
+      );
+      if (user) {
+        // console.log(url);
+        console.log(user);
+        res.status(200).send({
+          status: "success",
+          code: 200,
+          message: "Image successfully uploaded.",
+        });
+      } else {
+        return next(new ServeError("Problem Uploading data", 500));
+      }
+    } else {
       res.status(200).send({
         status: "success",
         code: 200,
-        message: "Image successfully uploaded.",
+        message: "No Image uploaded.",
       });
-    } else {
-      return next(new ServeError("Problem Uploading data", 500));
     }
-  }
+  });
 });
 
 export const updateProfile = CatchAsync(async (req, res, next) => {

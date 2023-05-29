@@ -24,11 +24,11 @@ const userSchema = new mongoose.Schema(
     },
     profilephoto: {
       type: String,
-      default: "userAvatar.jpg",
+      default: "",
     },
     coverphoto: {
       type: String,
-      default: "userCoverPhoto.jpg",
+      default: "",
     },
     profession: {
       type: "String",

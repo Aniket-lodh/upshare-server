@@ -27,12 +27,15 @@ export const upload = multer({
       callback(null, true);
     } else {
       callback(null, false);
-      return callback(
-        new ServeError("Only .png, .jpg, .jpeg format are allowed!", 500)
+      const err = new ServeError(
+        "Only .png, .jpg, .jpeg format are allowed!",
+        500
       );
+      err.name = "ExtensionError";
+      return callback(err);
     }
   },
   limit: {
-    fileSize: 52428800,
+    fileSize: 10 * 1024 * 1024, //10mb
   },
-});
+}).array("images", 2);
