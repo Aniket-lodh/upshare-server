@@ -111,7 +111,7 @@ export const updateProfileImage = CatchAsync(async (req, res, next) => {
         );
       }
     }
-
+    console.log(req);
     if (req.files && req.files.length >= 1) {
       const url = [];
       req.files.map((file, i) => {
