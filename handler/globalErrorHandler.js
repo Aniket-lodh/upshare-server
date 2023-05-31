@@ -69,6 +69,6 @@ const globalErrorHandler = async function (error, req, res, next) {
     castErrors(error, res);
   }
   // print unCaught errors
-  console.log(error);
+  // console.log(error);
 };
 export default globalErrorHandler;

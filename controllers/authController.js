@@ -48,7 +48,7 @@ export const protect = catchAsync(async (req, res, next) => {
     req.headers.authorization.startsWith("Bearer")
   )
     token = await req.headers.authorization.split(" ")[1];
-  // console.log(token);
+
   if (!token)
     return next(new ServeError("Session expired! please log in again.", 401));
   const decode_token = jwt.verify(token, process.env.TOKEN_SECRET, {
