@@ -135,7 +135,7 @@ export const updateProfileImage = CatchAsync(async (req, res, next) => {
       );
       if (user) {
         // console.log(url);
-        console.log(user);
+        // console.log(user);
         res.status(200).send({
           status: "success",
           code: 200,
@@ -155,6 +155,7 @@ export const updateProfileImage = CatchAsync(async (req, res, next) => {
 });
 
 export const updateProfile = CatchAsync(async (req, res, next) => {
+  // TODO: FIX only update the fields that was actually edited.
   const user = await UserModule.findById(req.user._id);
   if (user) {
     const updatedProfile = await user.updateOne({
@@ -171,7 +172,7 @@ export const updateProfile = CatchAsync(async (req, res, next) => {
       });
     } else {
       console.log("err in profile update");
-      console.log(updatedProfile);
+      // console.log(updatedProfile);
       return next(
         new ServeError("Couldnot update profile. Please try again later!", 500)
       );
@@ -198,20 +199,73 @@ export const deleteUser = async (req, res) => {
 };
 
 export const followUser = CatchAsync(async (req, res, next) => {
-  // TODO: work on not storing the user id if it already exists
-  const user = await UserModule.findByIdAndUpdate(
-    { _id: req.params.id, followers: { _id: { $ne: req.user._id } } },
-    { $push: { followers: { _id: req.user._id } } },
-    { new: true }
-  );
-  if (!user) {
-    return next(new ServeError("The following user no longer exists!", 500));
-  }
-  const curUser = await UserModule.findByIdAndUpdate(
-    { _id: req.user._id, following: { _id: { $ne: user._id } } },
-    { $push: { following: { _id: user._id } } },
-    { new: true }
-  );
+  // console.log(req.params, req.user);
+  if (req.user._id.toString() === req.params.id)
+    return next(new ServeError("You cannot follow yourself", 403));
 
-  res.send(curUser);
+  const FindUser = await UserModule.findById({
+    _id: req.params.id,
+  });
+  if (!FindUser) {
+    return next(new ServeError("The following user no longer exists!", 404));
+  }
+  if (FindUser.followers.indexOf(req.user._id) >= 0) {
+    return next(new ServeError("Already Following the user.", 409));
+  }
+  const updateFollowedUser = await FindUser.updateOne({
+    $push: {
+      followers: req.user._id,
+    },
+  });
+  const updateFolloweeUser = await UserModule.findByIdAndUpdate(
+    { _id: req.user._id },
+    {
+      $push: {
+        following: req.params.id,
+      },
+    }
+  );
+  if (updateFollowedUser && updateFolloweeUser) {
+    res.status(200).send({
+      status: "success",
+      code: 200,
+      message: "Started Following the user.",
+    });
+  }
+});
+
+export const unFollowUser = CatchAsync(async (req, res, next) => {
+  // console.log(req.params, req.user);
+  if (req.user._id.toString() === req.params.id)
+    return next(new ServeError("You cannot unfollow yourself", 403));
+
+  const FindUser = await UserModule.findById({
+    _id: req.params.id,
+  });
+  if (!FindUser) {
+    return next(new ServeError("The following user no longer exists!", 404));
+  }
+  if (FindUser.followers.indexOf(req.user._id) < 0) {
+    return next(new ServeError("Already unfollowed the user.", 409));
+  }
+  const updateUnFollowedUser = await FindUser.updateOne({
+    $pull: {
+      followers: req.user._id,
+    },
+  });
+  const updateUnFolloweeUser = await UserModule.findByIdAndUpdate(
+    { _id: req.user._id },
+    {
+      $pull: {
+        following: req.params.id,
+      },
+    }
+  );
+  if (updateUnFollowedUser && updateUnFolloweeUser) {
+    res.status(200).send({
+      status: "success",
+      code: 200,
+      message: "Unfollowed the user.",
+    });
+  }
 });

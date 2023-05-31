@@ -5,6 +5,7 @@ import {
   getUser,
   updateProfile,
   followUser,
+  unFollowUser,
   updateProfileImage,
 } from "../controllers/user_controller.js";
 
@@ -19,6 +20,7 @@ router.route("/me").get(protect, getProfile);
 router.route("/edit").patch(protect, updateProfile);
 
 router.route("/follow/:id").post(protect, followUser);
+router.route("/unfollow/:id").post(protect, unFollowUser);
 
 router.route("/:id").get(getUser);
 
