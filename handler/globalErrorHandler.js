@@ -22,9 +22,9 @@ const fieldErrors = async function (error, res) {
   });
 };
 const duplicateErrors = async function (error, res) {
-  res.send({
+  res.status(error.statusCode || 409).send({
     status: error.status,
-    code: error.statusCode,
+    code: error.statusCode || 409,
     errors: {
       type: "Duplicate field error",
       name: error.message.match(/(["'])(\\?.)*?\1/)[0].match(/"(.+?)"/)[1],
@@ -43,9 +43,9 @@ const castErrors = async function (error, res) {
 };
 const tokenExpiredErrors = async function (error, res) {
   error.expiredAt = new Date(error.expiredAt).toLocaleString();
-  res.status(error.statusCode).send({
+  res.status(error.statusCode || 401).send({
     status: error.status,
-    code: error.statusCode,
+    code: error.statusCode || 401,
     errors: {
       name: error.name,
       message: error.message,
@@ -67,8 +67,13 @@ const globalErrorHandler = async function (error, req, res, next) {
     duplicateErrors(error, res);
   } else if (error.name === "CastError") {
     castErrors(error, res);
+  } else {
+    // Catch-all for any unhandled error type
+    console.error("DEBUG ERROR:", error);
+    res.status(error.statusCode || 500).json({
+      status: "error",
+      message: error.stack || "Internal Server Error",
+    });
   }
-  // print unCaught errors
-  // console.log(error);
 };
 export default globalErrorHandler;

@@ -1,8 +1,9 @@
 import { ObjectId } from "mongodb";
 import { user as UserModule, user } from "../models/user_model.js";
+import { Post } from "../models/post_model.js";
 import CatchAsync from "../utils/catchAsync.js";
 import ServeError from "../utils/ServeError.js";
-import { CreateJwtToken, createAccessToken } from "./authController.js";
+import { CreateJwtToken } from "./authController.js";
 import { upload } from "../utils/MulterStorage.js";
 import multer from "multer";
 
@@ -14,8 +15,8 @@ export const getAllUsers = CatchAsync(async (req, res, next) => {
   const users = await UserModule.find();
   if (!users) return next(new ServeError("No users record found.", 400));
 
-  res.status(200).send({
-    status: 200,
+  res.status(200).json({
+    status: "success",
     message: "Successfully retreived records.",
     data: users,
   });
@@ -27,8 +28,8 @@ export const getUser = CatchAsync(async (req, res, next) => {
     return next(new ServeError("The user doesnot exist.", 401));
   user_profile.__v = undefined;
 
-  res.status(200).send({
-    status: 200,
+  res.status(200).json({
+    status: "success",
     message: "User profile found",
     data: user_profile,
   });
@@ -40,13 +41,13 @@ export const getUser = CatchAsync(async (req, res, next) => {
  **/
 export const getProfile = async (req, res, next) => {
   try {
-    res.status(200).send({
-      status: 200,
+    res.status(200).json({
+      status: "success",
       message: "Profile found successfully",
       data: req.user,
     });
   } catch (err) {
-    res.status(500).send({ status: 500, message: err.message, data: null });
+    res.status(500).json({ status: "error", message: err.message, data: null });
   }
 };
 
@@ -136,18 +137,18 @@ export const updateProfileImage = CatchAsync(async (req, res, next) => {
       if (user) {
         // console.log(url);
         // console.log(user);
-        res.status(200).send({
+        res.status(200).json({
           status: "success",
-          code: 200,
+          
           message: "Image successfully uploaded.",
         });
       } else {
         return next(new ServeError("Problem Uploading data", 500));
       }
     } else {
-      res.status(200).send({
+      res.status(200).json({
         status: "success",
-        code: 200,
+        
         message: "No Image uploaded.",
       });
     }
@@ -165,9 +166,9 @@ export const updateProfile = CatchAsync(async (req, res, next) => {
       },
     });
     if (updatedProfile) {
-      res.status(200).send({
+      res.status(200).json({
         status: "success",
-        code: 200,
+        
         message: "Profile Update Successfully",
       });
     } else {
@@ -189,12 +190,18 @@ export const updateProfile = CatchAsync(async (req, res, next) => {
  **/
 export const deleteUser = async (req, res) => {
   try {
-    await res.user.remove();
+    // Cascade delete user's posts
+    const userId = req.user._id;
+    await Post.deleteMany({ author: userId });
+
+    // Actually delete user
+    await req.user.deleteOne();
+
     res
       .status(200)
-      .send({ status: 200, message: "Successfully removed", data: null });
+      .json({ status: "success", message: "Successfully removed", data: null });
   } catch (err) {
-    res.status(500).send({ status: 500, message: err.message, data: null });
+    res.status(500).json({ status: "error", message: err.message, data: null });
   }
 };
 
@@ -226,9 +233,9 @@ export const followUser = CatchAsync(async (req, res, next) => {
     }
   );
   if (updateFollowedUser && updateFolloweeUser) {
-    res.status(200).send({
+    res.status(200).json({
       status: "success",
-      code: 200,
+      
       message: "Started Following the user.",
     });
   }
@@ -262,9 +269,9 @@ export const unFollowUser = CatchAsync(async (req, res, next) => {
     }
   );
   if (updateUnFollowedUser && updateUnFolloweeUser) {
-    res.status(200).send({
+    res.status(200).json({
       status: "success",
-      code: 200,
+      
       message: "Unfollowed the user.",
     });
   }

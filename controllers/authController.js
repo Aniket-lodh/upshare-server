@@ -4,13 +4,6 @@ import { user as UserModule } from "../models/user_model.js";
 import ServeError from "../utils/ServeError.js";
 import catchAsync from "../utils/catchAsync.js";
 
-//FIXME: Delete this function
-export const createAccessToken = async function (user) {
-  const id = { _id: user._id };
-  const accessToken = jwt.sign(id, process.env.TOKEN_SECRET);
-  return accessToken;
-};
-
 const signJwtToken = async function (id) {
   const token = jwt.sign({ id }, process.env.TOKEN_SECRET, {
     algorithm: "HS512",
@@ -18,14 +11,17 @@ const signJwtToken = async function (id) {
   });
   return token;
 };
+
 export const CreateJwtToken = async function (user, res, statusCode) {
   //Sign the JWT token
-  const jwt = await signJwtToken(user._id);
+  const token = await signJwtToken(user._id);
   const cookieOptions = {
-    expire: new Date(Date.now() + process.env.COOKIE_EXPIRES_IN * 60 * 1000),
-    httponly: true,
-    secure: true,
-    sameSite: "none",
+    expires: new Date(
+      Date.now() + process.env.COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000
+    ),
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
   };
   // Sets the origin of the website which will be access credentials
   res.setHeader("Access-Control-Allow-Credentials", true);
@@ -34,10 +30,10 @@ export const CreateJwtToken = async function (user, res, statusCode) {
     "Origin, X-Requested-With, Accept"
   );
 
-  res.cookie("token", jwt, cookieOptions); //Stores token in cookie
+  res.cookie("token", token, cookieOptions); //Stores token in cookie
   res
     .status(statusCode)
-    .send({ status: "success", code: statusCode, data: { jwt } });
+    .send({ status: "success", code: statusCode, data: { jwt: token } });
 };
 
 export const protect = catchAsync(async (req, res, next) => {
@@ -47,12 +43,12 @@ export const protect = catchAsync(async (req, res, next) => {
     req.headers.authorization &&
     req.headers.authorization.startsWith("Bearer")
   )
-    token = await req.headers.authorization.split(" ")[1];
+    token = req.headers.authorization.split(" ")[1];
 
   if (!token)
     return next(new ServeError("Session expired! please log in again.", 401));
   const decode_token = jwt.verify(token, process.env.TOKEN_SECRET, {
-    algorithm: "HS512",
+    algorithms: ["HS512"],
   });
   const user = await UserModule.findById(decode_token.id);
 
@@ -61,37 +57,3 @@ export const protect = catchAsync(async (req, res, next) => {
   req.user = user; //passing the user object so that next routes can access this
   next();
 });
-
-export const verifyToken = async (req, res, next) => {
-  const bearerToken = await req.headers["authorization"];
-  if (bearerToken) {
-    const token = bearerToken.split(" ")[1];
-    res.token = token;
-    next();
-  } else {
-    res.status(403).send({
-      status: 403,
-      message: "User isn't logged in or Invalid credentials.",
-      data: null,
-    });
-  }
-};
-
-export const verifyUser = async (req, res, next) => {
-  try {
-    const user = await promisify(jwt.verify)(
-      res.token,
-      process.env.TOKEN_SECRET
-    );
-
-    const userObj = await UserModule.findById(user);
-    if (!userObj)
-      return res
-        .status(404)
-        .send({ status: 400, message: "User doesn't exist" });
-    res.user = userObj;
-    next();
-  } catch (err) {
-    return res.status(500).send({ status: 500, message: err.message });
-  }
-};

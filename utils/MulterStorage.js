@@ -1,18 +1,19 @@
 import multer from "multer";
-import fs from "file-system";
+import fs from "fs";
+import path from "path";
 import ServeError from "./ServeError.js";
 
 const storage = multer.diskStorage({
   destination: function (req, file, callback) {
     const dir = `./public/upload/users/${req.user.id}`;
 
-    if (!fs.existsSync(dir)) fs.mkdirSync(dir);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
     callback(null, dir);
   },
   filename: function (req, file, callback) {
-    const fileName = file.originalname.toLowerCase().split(" ").join("-");
-
-    callback(null, fileName);
+    const sanitized = path.basename(file.originalname);
+    const filename = Date.now() + "-" + sanitized;
+    callback(null, filename);
   },
 });
 
@@ -35,7 +36,7 @@ export const upload = multer({
       return callback(err);
     }
   },
-  limit: {
+  limits: {
     fileSize: 10 * 1024 * 1024, //10mb
   },
 }).array("images", 2);

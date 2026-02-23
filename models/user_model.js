@@ -130,11 +130,10 @@ const userSchema = new mongoose.Schema(
   { versionKey: false }
 );
 
-userSchema.pre("save", async function (next) {
+userSchema.pre("save", async function () {
   this.passcode = await bcrypt.hash(this.passcode, 10);
   //delete the fields
   this.passcodeConfirm = undefined;
-  next();
 });
 
 userSchema.methods.correctPassword = async (

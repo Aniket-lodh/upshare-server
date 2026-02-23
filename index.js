@@ -15,9 +15,7 @@ const connectDB = async () => {
     await mongoose
       .set("strictQuery", false)
       .connect(URI, {
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
-        connectTimeoutMS: 5000,
+        serverSelectionTimeoutMS: 5000,
       })
       .then((conn) =>
         console.log(
@@ -27,9 +25,11 @@ const connectDB = async () => {
       );
   } catch (err) {
     console.error(
-      chalk.magentaBright(`Error while connecting to database.\nErr:: ${err.message}`)
+      chalk.magentaBright(
+        `Error while connecting to database.\nErr:: ${err.message}`
+      )
     );
-    
+
     process.exit(1);
   }
 };
@@ -46,8 +46,8 @@ connectDB().then(
 );
 
 process.on("unhandledRejection", (err) => {
-  // console.log(chalk.bgRedBright("UNHANDLED REJECTION! 💥 Shutting down..."));
-  // console.error(`${err.name}=> ${err.message}`);
+  console.log(chalk.bgRedBright("UNHANDLED REJECTION! 💥 Shutting down..."));
+  console.error("UNHANDLED REJECTION:", err);
   server.close(() => {
     process.exit(1);
   });
