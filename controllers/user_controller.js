@@ -23,7 +23,9 @@ export const getAllUsers = CatchAsync(async (req, res, next) => {
 });
 
 export const getUser = CatchAsync(async (req, res, next) => {
-  const user_profile = await UserModule.findById(req.params.id);
+  const user_profile = await UserModule.findById(req.params.id).select(
+    "+username +bio +profession +website +email +phone +gender +country +state +location +followers +following +likes"
+  );
   if (!user_profile)
     return next(new ServeError("The user doesnot exist.", 401));
   user_profile.__v = undefined;
@@ -41,10 +43,13 @@ export const getUser = CatchAsync(async (req, res, next) => {
  **/
 export const getProfile = async (req, res, next) => {
   try {
+    const fullUser = await UserModule.findById(req.user._id).select(
+      "+username +bio +profession +website +email +phone +gender +country +state +location +followers +following +likes"
+    );
     res.status(200).json({
       status: "success",
       message: "Profile found successfully",
-      data: req.user,
+      data: fullUser,
     });
   } catch (err) {
     res.status(500).json({ status: "error", message: err.message, data: null });
@@ -139,7 +144,7 @@ export const updateProfileImage = CatchAsync(async (req, res, next) => {
         // console.log(user);
         res.status(200).json({
           status: "success",
-          
+
           message: "Image successfully uploaded.",
         });
       } else {
@@ -148,7 +153,7 @@ export const updateProfileImage = CatchAsync(async (req, res, next) => {
     } else {
       res.status(200).json({
         status: "success",
-        
+
         message: "No Image uploaded.",
       });
     }
@@ -168,7 +173,7 @@ export const updateProfile = CatchAsync(async (req, res, next) => {
     if (updatedProfile) {
       res.status(200).json({
         status: "success",
-        
+
         message: "Profile Update Successfully",
       });
     } else {
@@ -235,7 +240,7 @@ export const followUser = CatchAsync(async (req, res, next) => {
   if (updateFollowedUser && updateFolloweeUser) {
     res.status(200).json({
       status: "success",
-      
+
       message: "Started Following the user.",
     });
   }
@@ -271,7 +276,7 @@ export const unFollowUser = CatchAsync(async (req, res, next) => {
   if (updateUnFollowedUser && updateUnFolloweeUser) {
     res.status(200).json({
       status: "success",
-      
+
       message: "Unfollowed the user.",
     });
   }
