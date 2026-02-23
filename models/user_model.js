@@ -18,6 +18,7 @@ const userSchema = new mongoose.Schema(
     username: {
       type: String,
       lowercase: true,
+      select: false,
       default: function () {
         return this.name.split(" ").join("");
       },
@@ -33,30 +34,36 @@ const userSchema = new mongoose.Schema(
     profession: {
       type: "String",
       default: "",
+      select: false,
     },
     bio: {
       type: "string",
       maxlength: [150, "Max length reached!"],
       default: "",
+      select: false,
     },
     website: {
       type: "String",
       default: "",
+      select: false,
     },
     gender: {
       type: String,
       enum: ["male", "female", "others"],
       lowercase: true,
+      select: false,
     },
     email: {
       type: String,
       required: [true, "email is required"],
       lowercase: true,
       unique: true,
+      select: false,
       validate: [validator.isEmail, "Please provide a valid email"],
     },
     phone: {
       type: String,
+      select: false,
       minlength: [10, "Minimum length 10"],
       maxlength: [10, "Maximum length 10"],
     },
@@ -73,6 +80,7 @@ const userSchema = new mongoose.Schema(
     location: {
       type: String,
       default: "",
+      select: false,
     },
     passcode: {
       type: String,
@@ -97,19 +105,18 @@ const userSchema = new mongoose.Schema(
     likes: {
       type: Array,
       default: [],
+      select: false,
     },
     followers: {
       type: Array,
       default: [],
+      select: false,
     },
     following: {
       type: Array,
       default: [],
+      select: false,
     },
-    //   listings: {
-    //     type: [ObjectId],
-    //     default: undefined,
-    //   },
     createdAt: {
       type: String,
       default: function () {
