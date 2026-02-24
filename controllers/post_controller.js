@@ -113,7 +113,7 @@ export const likePost = catchAsync(async (req, res, next) => {
     req.params.id,
     { $addToSet: { likes: req.user._id } },
     { new: true }
-  );
+  ).select("likes");
 
   if (!post) {
     return next(new ServeError("No post found with that ID", 404));
@@ -122,7 +122,7 @@ export const likePost = catchAsync(async (req, res, next) => {
   res.status(200).json({
     status: "success",
     message: "Post liked",
-    data: post,
+    data: { likes: post.likes, likesCount: post.likes.length },
   });
 });
 
@@ -131,7 +131,7 @@ export const unlikePost = catchAsync(async (req, res, next) => {
     req.params.id,
     { $pull: { likes: req.user._id } },
     { new: true }
-  );
+  ).select("likes");
 
   if (!post) {
     return next(new ServeError("No post found with that ID", 404));
@@ -140,7 +140,7 @@ export const unlikePost = catchAsync(async (req, res, next) => {
   res.status(200).json({
     status: "success",
     message: "Post unliked",
-    data: post,
+    data: { likes: post.likes, likesCount: post.likes.length },
   });
 });
 

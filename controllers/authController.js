@@ -30,10 +30,16 @@ export const CreateJwtToken = async function (user, res, statusCode) {
     "Origin, X-Requested-With, Accept"
   );
 
+  // Re-fetch full user profile with all fields for the frontend
+  const fullUser = await UserModule.findById(user._id).select(
+    "+username +bio +profession +website +email +phone +gender +country +state +location +followers +following +likes"
+  );
+
   res.cookie("token", token, cookieOptions); //Stores token in cookie
-  res
-    .status(statusCode)
-    .send({ status: "success", code: statusCode, data: { jwt: token } });
+  res.status(statusCode).json({
+    status: "success",
+    data: fullUser,
+  });
 };
 
 export const protect = catchAsync(async (req, res, next) => {
