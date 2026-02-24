@@ -58,9 +58,8 @@ postSchema.index({ author: 1 });
 postSchema.index({ likes: 1 });
 
 // Pre-save hook to update updatedAt
-postSchema.pre("save", function (next) {
+postSchema.pre("save", function () {
   this.updatedAt = Date.now();
-  next();
 });
 
 export const Post = mongoose.model("post", postSchema);
