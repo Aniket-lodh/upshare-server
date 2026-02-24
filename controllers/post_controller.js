@@ -195,13 +195,12 @@ export const deletePost = catchAsync(async (req, res, next) => {
   // Remove image from disk
   if (post.image) {
     try {
-      // image is a full URL: http://localhost:2408/upload/posts/user_id/filename.ext
-      const urlParts = new URL(post.image);
-      // pathname starts with /upload/..., map to ./public/upload/...
+      // post.image is a relative path: /upload/posts/user_id/filename.ext
+      // map to ./public/upload/...
       const imagePath = path.join(
         process.cwd(),
         "public",
-        decodeURI(urlParts.pathname)
+        decodeURI(post.image)
       );
 
       if (fs.existsSync(imagePath)) {
