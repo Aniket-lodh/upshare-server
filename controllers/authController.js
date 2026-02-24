@@ -63,3 +63,17 @@ export const protect = catchAsync(async (req, res, next) => {
   req.user = user; //passing the user object so that next routes can access this
   next();
 });
+
+export const logoutUser = (req, res) => {
+  res.cookie("token", "", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    expires: new Date(0), // Expire immediately
+  });
+
+  res.status(200).json({
+    status: "success",
+    message: "Logged out successfully",
+  });
+};
