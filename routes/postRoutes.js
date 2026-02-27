@@ -8,7 +8,6 @@ import {
   likePost,
   unlikePost,
   deletePost,
-  uploadPostImage,
   commentOnPost,
 } from "../controllers/post_controller.js";
 
@@ -35,7 +34,6 @@ router
   .route("/")
   .post(
     protect,
-    uploadPostImage,
     body("caption")
       .isLength({ max: 500 })
       .withMessage("Caption cannot exceed 500 characters"),

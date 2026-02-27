@@ -2,57 +2,56 @@ import { Post } from "../models/post_model.js";
 import { user as User } from "../models/user_model.js";
 import catchAsync from "../utils/catchAsync.js";
 import ServeError from "../utils/ServeError.js";
-import { postUpload } from "../utils/postUpload.js";
-import multer from "multer";
-import fs from "fs";
-import path from "path";
-
-export const uploadPostImage = (req, res, next) => {
-  postUpload.single("image")(req, res, (err) => {
-    if (err instanceof multer.MulterError) {
-      return next(new ServeError(`Upload Error: ${err.message}`, 400));
-    } else if (err) {
-      return next(new ServeError(err.message, 400));
-    }
-    next();
-  });
-};
+import streamifier from "streamifier";
+import cloudinary from "../utils/cloudinary.js";
+import { upload } from "../utils/uploadMemory.js";
 
 export const createPost = catchAsync(async (req, res, next) => {
-  if (!req.file) {
-    return next(new ServeError("An image is required to create a post.", 400));
-  }
+  upload(req, res, async function (err) {
+    if (err) return next(err);
 
-  const { caption, tags } = req.body;
-
-  if (!caption) {
-    return next(new ServeError("A caption is required.", 400));
-  }
-
-  // Generate relative URL for the uploaded image to prevent origin exposure
-  const imageUrl = `/upload/posts/${req.user._id}/${req.file.filename}`;
-
-  // Parse tags if sent as JSON string
-  let parsedTags = [];
-  if (tags) {
-    try {
-      parsedTags = typeof tags === "string" ? JSON.parse(tags) : tags;
-    } catch (e) {
-      parsedTags =
-        typeof tags === "string" ? tags.split(",").map((t) => t.trim()) : [];
+    if (!req.files || req.files.length === 0) {
+      return next(
+        new ServeError("An image is required to create a post.", 400)
+      );
     }
-  }
 
-  const newPost = await Post.create({
-    caption,
-    image: imageUrl,
-    tags: parsedTags,
-    author: req.user._id,
-  });
+    const file = req.files[0];
 
-  res.status(201).json({
-    status: "success",
-    data: newPost,
+    const uploadToCloudinary = () =>
+      new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+          {
+            folder: `upshare/posts/${req.user._id}`,
+            transformation: [{ width: 1200, crop: "limit" }],
+          },
+          (error, result) => {
+            if (error) return reject(error);
+            resolve(result);
+          }
+        );
+
+        streamifier.createReadStream(file.buffer).pipe(stream);
+      });
+
+    const result = await uploadToCloudinary();
+
+    const { caption, tags } = req.body;
+
+    const parsedTags = tags ? tags.split(",").map((tag) => tag.trim()) : [];
+
+    const newPost = await Post.create({
+      caption,
+      image: result.secure_url,
+      tags: parsedTags,
+      author: req.user._id,
+    });
+
+    res.status(201).json({
+      success: true,
+      message: "Post created successfully",
+      data: newPost,
+    });
   });
 });
 
@@ -190,26 +189,6 @@ export const deletePost = catchAsync(async (req, res, next) => {
     return next(
       new ServeError("You don't have permission to delete this post", 403)
     );
-  }
-
-  // Remove image from disk
-  if (post.image) {
-    try {
-      // post.image is a relative path: /upload/posts/user_id/filename.ext
-      // map to ./public/upload/...
-      const imagePath = path.join(
-        process.cwd(),
-        "public",
-        decodeURI(post.image)
-      );
-
-      if (fs.existsSync(imagePath)) {
-        fs.unlinkSync(imagePath);
-      }
-    } catch (err) {
-      console.error("Failed to delete post image file:", err);
-      // We log but do not fail the request if file is already gone
-    }
   }
 
   await post.deleteOne();

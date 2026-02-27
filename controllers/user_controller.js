@@ -4,8 +4,10 @@ import { Post } from "../models/post_model.js";
 import CatchAsync from "../utils/catchAsync.js";
 import ServeError from "../utils/ServeError.js";
 import { CreateJwtToken } from "./authController.js";
-import { upload } from "../utils/MulterStorage.js";
+import { upload } from "../utils/uploadMemory.js";
+import cloudinary from "../utils/cloudinary.js";
 import multer from "multer";
+import streamifier from "streamifier";
 
 /**
  * Get all available users from the database
@@ -47,7 +49,7 @@ export const getProfile = async (req, res, next) => {
       "+username +bio +profession +website +email +phone +gender +country +state +location +followers +following +likes"
     );
     res.status(200).json({
-      status: "success",
+      success: true,
       message: "Profile found successfully",
       data: fullUser,
     });
@@ -58,10 +60,7 @@ export const getProfile = async (req, res, next) => {
 
 export const loginUser = CatchAsync(async (req, res, next) => {
   const { email, passcode } = req.body;
-  // 1) Check if email and password is empty
-  if (!email || !passcode)
-    return next(new ServeError("Please provide email and password!", 400));
-  else if (email === passcode)
+  if (email === passcode)
     return next(new ServeError("Password cannot contain email.", 400));
   const user = await UserModule.findOne({ email }).select("+passcode");
 
@@ -104,59 +103,54 @@ export const createUser = CatchAsync(async (req, res, next) => {
 // TODO: FIX the edit section part, where it gets stuck
 export const updateProfileImage = CatchAsync(async (req, res, next) => {
   upload(req, res, async function (err) {
-    if (err instanceof multer.MulterError) {
-      //A multer error occurred when uploading.
-      return next(new ServeError("Multer Error Uploading.", 500));
-    } else if (err) {
-      // An unknown error occurred when uploading.
-      if (err.name == "ExtensionError") {
-        return next(new ServeError(err.message, 413));
-      } else {
-        return next(
-          new ServeError(`Unknown uploading error: ${err.message}`, 500)
-        );
-      }
+    if (err) return next(err);
+
+    if (!req.files || req.files.length === 0) {
+      return next(new ServeError("No images uploaded", 400));
     }
-    // console.log(req);
-    if (req.files && req.files.length >= 1) {
-      const url = [];
-      req.files.map((file, i) => {
-        url.push(
-          `${req.protocol}://${req.hostname}/upload/users/${req.user.id}/${file.filename}`
-        );
-      });
-      // console.log(url);
 
-      const user = await UserModule.findByIdAndUpdate(
-        {
-          _id: req.user._id,
-        },
-        {
-          $set: {
-            profilephoto: url[0],
-            coverphoto: url[1],
-          },
-        },
-        { new: true }
-      );
-      if (user) {
-        // console.log(url);
-        // console.log(user);
-        res.status(200).json({
-          status: "success",
+    const uploadedUrls = [];
 
-          message: "Image successfully uploaded.",
+    for (const file of req.files) {
+      const uploadToCloudinary = () =>
+        new Promise((resolve, reject) => {
+          const stream = cloudinary.uploader.upload_stream(
+            {
+              folder: `upshare/users/${req.user._id}`,
+              transformation: [{ width: 800, crop: "limit" }],
+            },
+            (error, result) => {
+              if (error) return reject(error);
+              resolve(result);
+            }
+          );
+
+          streamifier.createReadStream(file.buffer).pipe(stream);
         });
-      } else {
-        return next(new ServeError("Problem Uploading data", 500));
-      }
-    } else {
-      res.status(200).json({
-        status: "success",
 
-        message: "No Image uploaded.",
-      });
+      const result = await uploadToCloudinary();
+      uploadedUrls.push(result.secure_url);
     }
+
+    const updatedUser = await UserModule.findByIdAndUpdate(
+      req.user._id,
+      {
+        $set: {
+          profilephoto: uploadedUrls[0] || "",
+          coverphoto: uploadedUrls[1] || "",
+        },
+      },
+      { new: true }
+    );
+
+    res.status(200).json({
+      success: true,
+      message: "Images uploaded successfully",
+      data: {
+        profilephoto: updatedUser.profilephoto,
+        coverphoto: updatedUser.coverphoto,
+      },
+    });
   });
 });
 

@@ -130,10 +130,18 @@ const userSchema = new mongoose.Schema(
   { versionKey: false }
 );
 
-userSchema.pre("save", async function () {
+userSchema.pre("save", async function (next) {
+  if (!this.isModified("passcode")) return next();
+
   this.passcode = await bcrypt.hash(this.passcode, 10);
-  //delete the fields
+
   this.passcodeConfirm = undefined;
+
+  if (!this.isNew) {
+    this.passcodeChangedAt = Date.now() - 1000;
+  }
+
+  next();
 });
 
 userSchema.methods.correctPassword = async (
@@ -141,6 +149,19 @@ userSchema.methods.correctPassword = async (
   userPassword
 ) => {
   return await bcrypt.compare(candidatePassword, userPassword);
+};
+
+userSchema.methods.changedPasswordAfter = function (JWTTimestamp) {
+  if (this.passcodeChangedAt) {
+    const changedTimestamp = parseInt(
+      this.passcodeChangedAt.getTime() / 1000,
+      10
+    );
+
+    return JWTTimestamp < changedTimestamp;
+  }
+
+  return false;
 };
 // 1st parameter in model stands for the database table name in mongodb
 export const user = mongoose.model("user", userSchema);

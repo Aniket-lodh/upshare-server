@@ -17,19 +17,12 @@ export const CreateJwtToken = async function (user, res, statusCode) {
   const token = await signJwtToken(user._id);
   const cookieOptions = {
     expires: new Date(
-      Date.now() + process.env.COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000
+      Date.now() + parseInt(process.env.COOKIE_EXPIRES_IN) * 24 * 60 * 60 * 1000
     ),
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
   };
-  // Sets the origin of the website which will be access credentials
-  res.setHeader("Access-Control-Allow-Credentials", true);
-  res.setHeader(
-    "Access-Control-Allow-Headers",
-    "Origin, X-Requested-With, Accept"
-  );
-
   // Re-fetch full user profile with all fields for the frontend
   const fullUser = await UserModule.findById(user._id).select(
     "+username +bio +profession +website +email +phone +gender +country +state +location +followers +following +likes"
@@ -37,30 +30,48 @@ export const CreateJwtToken = async function (user, res, statusCode) {
 
   res.cookie("token", token, cookieOptions); //Stores token in cookie
   res.status(statusCode).json({
-    status: "success",
+    success: true,
+    message:
+      statusCode === 201
+        ? "Account created successfully"
+        : "Logged in successfully",
     data: fullUser,
   });
 };
 
 export const protect = catchAsync(async (req, res, next) => {
   let token;
-  if (req.cookies.token) token = req.cookies.token;
-  else if (
+
+  if (req.cookies.token) {
+    token = req.cookies.token;
+  } else if (
     req.headers.authorization &&
     req.headers.authorization.startsWith("Bearer")
-  )
+  ) {
     token = req.headers.authorization.split(" ")[1];
+  }
 
-  if (!token)
-    return next(new ServeError("Session expired! please log in again.", 401));
-  const decode_token = jwt.verify(token, process.env.TOKEN_SECRET, {
+  if (!token) {
+    return next(new ServeError("Authentication required", 401));
+  }
+
+  const decoded = jwt.verify(token, process.env.TOKEN_SECRET, {
     algorithms: ["HS512"],
   });
-  const user = await UserModule.findById(decode_token.id);
 
-  if (!user) return next(new ServeError("The user doesnot exist.", 401));
+  const currentUser = await UserModule.findById(decoded.id);
 
-  req.user = user; //passing the user object so that next routes can access this
+  if (!currentUser) {
+    return next(new ServeError("User no longer exists", 401));
+  }
+
+  if (currentUser.changedPasswordAfter(decoded.iat)) {
+    return next(
+      new ServeError("Password recently changed. Please log in again.", 401)
+    );
+  }
+
+  req.user = currentUser;
   next();
 });
 

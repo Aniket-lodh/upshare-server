@@ -1,79 +1,51 @@
-const validationErrors = async function (error, res) {
-  const errors = Object.values(error.errors).map((errObj) => {
-    return {
-      name: errObj.path,
-      message: errObj.message,
-    };
-  });
-  res.status(error.statusCode).send({
-    status: error.status,
-    code: error.statusCode,
-    errors: {
-      type: error.name,
-      fields: errors,
-    },
-  });
-};
-const fieldErrors = async function (error, res) {
-  res.status(error.statusCode).send({
-    status: error.status,
-    code: error.statusCode,
-    errors: error.message,
-  });
-};
-const duplicateErrors = async function (error, res) {
-  res.status(error.statusCode || 409).send({
-    status: error.status,
-    code: error.statusCode || 409,
-    errors: {
-      type: "Duplicate field error",
-      name: error.message.match(/(["'])(\\?.)*?\1/)[0].match(/"(.+?)"/)[1],
-    },
-  });
-};
-const castErrors = async function (error, res) {
-  res.status(error.statusCode).send({
-    status: error.status,
-    code: error.statusCode,
-    errors: {
-      type: "Cast error",
-      name: error.message,
-    },
-  });
-};
-const tokenExpiredErrors = async function (error, res) {
-  error.expiredAt = new Date(error.expiredAt).toLocaleString();
-  res.status(error.statusCode || 401).send({
-    status: error.status,
-    code: error.statusCode || 401,
-    errors: {
-      name: error.name,
-      message: error.message,
-      expiredAt: error.expiredAt,
-    },
-  });
-};
-const globalErrorHandler = async function (error, req, res, next) {
-  error.status = error.status || "Error";
-  error.statusCode = error.statusCode || 500;
+const globalErrorHandler = (err, req, res, next) => {
+  console.error("ERROR:", err);
 
-  if (error.name == "TokenExpiredError") {
-    tokenExpiredErrors(error, res);
-  } else if (error.name === "ValidationError") {
-    validationErrors(error, res);
-  } else if (error.name === "Error") {
-    fieldErrors(error, res);
-  } else if (error.code === 11000) {
-    duplicateErrors(error, res);
-  } else if (error.name === "CastError") {
-    castErrors(error, res);
-  } else {
-    // Catch-all for any unhandled error type
-    console.error("DEBUG ERROR:", error);
-    res.status(error.statusCode || 500).json({
-      status: "error",
-      message: error.stack || "Internal Server Error",
+  const statusCode = err.statusCode || 500;
+  const message = err.message || "Internal Server Error";
+
+  // Mongoose validation error
+  if (err.name === "ValidationError") {
+    const errors = Object.values(err.errors).map((e) => ({
+      field: e.path,
+      message: e.message,
+    }));
+
+    return res.status(400).json({
+      success: false,
+      message: "Validation failed",
+      errors,
     });
   }
+
+  // Duplicate key
+  if (err.code === 11000) {
+    return res.status(409).json({
+      success: false,
+      message: "Duplicate field value",
+    });
+  }
+
+  // Cast error
+  if (err.name === "CastError") {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid ID format",
+    });
+  }
+
+  // JWT expired
+  if (err.name === "TokenExpiredError") {
+    return res.status(401).json({
+      success: false,
+      message: "Session expired. Please log in again.",
+    });
+  }
+
+  return res.status(statusCode).json({
+    success: false,
+    message,
+  });
 };
+
 export default globalErrorHandler;

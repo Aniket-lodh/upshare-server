@@ -17,7 +17,9 @@ app.use(helmet());
 app.use(
   rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: 200,
+    max: 500,
+    standardHeaders: true,
+    legacyHeaders: false,
   })
 );
 
@@ -34,7 +36,6 @@ app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
 // Static files, cookies, compression
-app.use(express.static("public"));
 app.use(cookieParser());
 app.use(
   compression({
@@ -42,16 +43,49 @@ app.use(
   })
 );
 
-// Root
-app.get("/", (req, res, next) => {
-  res.status(200).send({
-    message: "You have encountered Upshare Backend Server.",
-  });
+import mongoose from "mongoose";
+
+// Root (Health Check)
+app.get("/", async (req, res) => {
+  try {
+    const dbState = mongoose.connection.readyState;
+
+    const dbStatus = dbState === 1 ? "connected" : "disconnected";
+
+    res.status(200).json({
+      success: true,
+      message: "Upshare API healthy",
+      data: {
+        uptime: process.uptime(),
+        database: dbStatus,
+        timestamp: Date.now(),
+      },
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: "Health check failed",
+    });
+  }
 });
 
 import postRouter from "./routes/postRoutes.js";
 
 // ROUTES
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: {
+    success: false,
+    message: "Too many login attempts. Try again later.",
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+app.use("/users/login", authLimiter);
+app.use("/users/signup", authLimiter);
+
 app.use("/users", usersRouter);
 app.use("/posts", postRouter);
 

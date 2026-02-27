@@ -7,10 +7,7 @@ dotenv.config({ path: "./config.env" });
 
 const connectDB = async () => {
   // New database connection
-  const URI = process.env.MONGODB_CON_URL.replace(
-    "<PASSWORD>",
-    process.env.ATLAS_UPSHARE_PASS
-  );
+  const URI = process.env.MONGODB_URI;
   try {
     await mongoose
       .set("strictQuery", false)
@@ -51,4 +48,9 @@ process.on("unhandledRejection", (err) => {
   server.close(() => {
     process.exit(1);
   });
+});
+
+process.on("uncaughtException", (err) => {
+  console.error("UNCAUGHT EXCEPTION:", err);
+  process.exit(1);
 });
