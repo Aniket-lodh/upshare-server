@@ -4,7 +4,7 @@ import { Post } from "../models/post_model.js";
 import CatchAsync from "../utils/catchAsync.js";
 import ServeError from "../utils/ServeError.js";
 import { CreateJwtToken } from "./authController.js";
-import { upload } from "../utils/uploadMemory.js";
+import { uploadProfileImages as upload } from "../utils/uploadMemory.js";
 import cloudinary from "../utils/cloudinary.js";
 import multer from "multer";
 import streamifier from "streamifier";

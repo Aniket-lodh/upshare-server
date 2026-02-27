@@ -4,19 +4,19 @@ import catchAsync from "../utils/catchAsync.js";
 import ServeError from "../utils/ServeError.js";
 import streamifier from "streamifier";
 import cloudinary from "../utils/cloudinary.js";
-import { upload } from "../utils/uploadMemory.js";
+import { uploadPostImage as upload } from "../utils/uploadMemory.js";
 
 export const createPost = catchAsync(async (req, res, next) => {
   upload(req, res, async function (err) {
     if (err) return next(err);
 
-    if (!req.files || req.files.length === 0) {
+    if (!req.file) {
       return next(
         new ServeError("An image is required to create a post.", 400)
       );
     }
 
-    const file = req.files[0];
+    const file = req.file;
 
     const uploadToCloudinary = () =>
       new Promise((resolve, reject) => {

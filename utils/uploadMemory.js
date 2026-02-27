@@ -3,7 +3,7 @@ import ServeError from "./ServeError.js";
 
 const storage = multer.memoryStorage();
 
-export const upload = multer({
+export const uploadMemory = multer({
   storage,
   limits: {
     fileSize: 5 * 1024 * 1024, // 5MB (reduce from 10MB)
@@ -22,4 +22,7 @@ export const upload = multer({
       callback(err);
     }
   },
-}).array("images", 2);
+});
+
+export const uploadProfileImages = uploadMemory.array("images", 2);
+export const uploadPostImage = uploadMemory.single("image");

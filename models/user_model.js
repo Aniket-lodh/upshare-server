@@ -130,8 +130,8 @@ const userSchema = new mongoose.Schema(
   { versionKey: false }
 );
 
-userSchema.pre("save", async function (next) {
-  if (!this.isModified("passcode")) return next();
+userSchema.pre("save", async function () {
+  if (!this.isModified("passcode")) return;
 
   this.passcode = await bcrypt.hash(this.passcode, 10);
 
@@ -140,8 +140,6 @@ userSchema.pre("save", async function (next) {
   if (!this.isNew) {
     this.passcodeChangedAt = Date.now() - 1000;
   }
-
-  next();
 });
 
 userSchema.methods.correctPassword = async (
