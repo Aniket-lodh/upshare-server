@@ -18,7 +18,7 @@ export const getAllUsers = CatchAsync(async (req, res, next) => {
   if (!users) return next(new ServeError("No users record found.", 400));
 
   res.status(200).json({
-    status: "success",
+    success: true,
     message: "Successfully retreived records.",
     data: users,
   });
@@ -33,7 +33,7 @@ export const getUser = CatchAsync(async (req, res, next) => {
   user_profile.__v = undefined;
 
   res.status(200).json({
-    status: "success",
+    success: true,
     message: "User profile found",
     data: user_profile,
   });
@@ -54,7 +54,7 @@ export const getProfile = async (req, res, next) => {
       data: fullUser,
     });
   } catch (err) {
-    res.status(500).json({ status: "error", message: err.message, data: null });
+    res.status(500).json({ success: false, message: err.message, data: null });
   }
 };
 
@@ -166,7 +166,7 @@ export const updateProfile = CatchAsync(async (req, res, next) => {
     });
     if (updatedProfile) {
       res.status(200).json({
-        status: "success",
+        success: true,
 
         message: "Profile Update Successfully",
       });
@@ -198,9 +198,9 @@ export const deleteUser = async (req, res) => {
 
     res
       .status(200)
-      .json({ status: "success", message: "Successfully removed", data: null });
+      .json({ success: true, message: "Successfully removed", data: null });
   } catch (err) {
-    res.status(500).json({ status: "error", message: err.message, data: null });
+    res.status(500).json({ success: false, message: err.message, data: null });
   }
 };
 
@@ -233,7 +233,7 @@ export const followUser = CatchAsync(async (req, res, next) => {
   );
   if (updateFollowedUser && updateFolloweeUser) {
     res.status(200).json({
-      status: "success",
+      success: true,
 
       message: "Started Following the user.",
     });
@@ -269,7 +269,7 @@ export const unFollowUser = CatchAsync(async (req, res, next) => {
   );
   if (updateUnFollowedUser && updateUnFolloweeUser) {
     res.status(200).json({
-      status: "success",
+      success: true,
 
       message: "Unfollowed the user.",
     });

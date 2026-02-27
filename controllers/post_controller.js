@@ -74,7 +74,7 @@ export const getFeed = catchAsync(async (req, res, next) => {
   const total = await Post.countDocuments();
 
   res.status(200).json({
-    status: "success",
+    success: true,
     results: posts.length,
     pagination: {
       page,
@@ -102,7 +102,7 @@ export const getPost = catchAsync(async (req, res, next) => {
   }
 
   res.status(200).json({
-    status: "success",
+    success: true,
     data: post,
   });
 });
@@ -119,7 +119,7 @@ export const likePost = catchAsync(async (req, res, next) => {
   }
 
   res.status(200).json({
-    status: "success",
+    success: true,
     message: "Post liked",
     data: { likes: post.likes, likesCount: post.likes.length },
   });
@@ -137,7 +137,7 @@ export const unlikePost = catchAsync(async (req, res, next) => {
   }
 
   res.status(200).json({
-    status: "success",
+    success: true,
     message: "Post unliked",
     data: { likes: post.likes, likesCount: post.likes.length },
   });
@@ -171,7 +171,7 @@ export const commentOnPost = catchAsync(async (req, res, next) => {
   }
 
   res.status(201).json({
-    status: "success",
+    success: true,
     message: "Comment added",
     data: post,
   });
@@ -194,7 +194,7 @@ export const deletePost = catchAsync(async (req, res, next) => {
   await post.deleteOne();
 
   res.status(204).json({
-    status: "success",
+    success: true,
     data: null,
   });
 });

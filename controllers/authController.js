@@ -84,7 +84,7 @@ export const logoutUser = (req, res) => {
   });
 
   res.status(200).json({
-    status: "success",
+    success: true,
     message: "Logged out successfully",
   });
 };
