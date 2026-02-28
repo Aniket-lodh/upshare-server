@@ -32,18 +32,18 @@ const userSchema = new mongoose.Schema(
       default: "",
     },
     profession: {
-      type: "String",
+      type: String,
       default: "",
       select: false,
     },
     bio: {
-      type: "string",
+      type: String,
       maxlength: [150, "Max length reached!"],
       default: "",
       select: false,
     },
     website: {
-      type: "String",
+      type: String,
       default: "",
       select: false,
     },

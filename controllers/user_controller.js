@@ -155,31 +155,49 @@ export const updateProfileImage = CatchAsync(async (req, res, next) => {
 });
 
 export const updateProfile = CatchAsync(async (req, res, next) => {
-  // TODO: FIX only update the fields that was actually edited.
   const user = await UserModule.findById(req.user._id);
-  if (user) {
-    const updatedProfile = await user.updateOne({
-      $set: {
-        ...req.body,
-        location: `${req.body.country}, ${req.body.state}`,
-      },
-    });
-    if (updatedProfile) {
-      res.status(200).json({
-        success: true,
 
-        message: "Profile Update Successfully",
-      });
-    } else {
-      console.log("err in profile update");
-      // console.log(updatedProfile);
-      return next(
-        new ServeError("Couldnot update profile. Please try again later!", 500)
-      );
-    }
-  } else {
-    return next(new ServeError("The user doesnot exist", 404));
+  if (!user) {
+    return next(new ServeError("The user does not exist", 404));
   }
+
+  const allowedFields = [
+    "name",
+    "username",
+    "bio",
+    "website",
+    "email",
+    "phone",
+    "gender",
+    "profession",
+    "country",
+    "state",
+  ];
+
+  const updates = {};
+
+  allowedFields.forEach((field) => {
+    if (req.body[field] !== undefined && req.body[field] !== "") {
+      updates[field] = req.body[field];
+    }
+  });
+
+  if (updates.country || updates.state) {
+    updates.location = `${updates.country || user.country}, ${
+      updates.state || user.state
+    }`;
+  }
+
+  await user.updateOne({ $set: updates });
+  const updatedUser = await UserModule.findById(req.user._id).select(
+    "+username +bio +profession +website +email +phone +gender +country +state +location +followers +following +likes"
+  );
+
+  res.status(200).json({
+    success: true,
+    message: "Profile Update Successfully",
+    data: updatedUser,
+  });
 });
 
 /**
