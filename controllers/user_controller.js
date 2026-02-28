@@ -105,51 +105,56 @@ export const updateProfileImage = CatchAsync(async (req, res, next) => {
   upload(req, res, async function (err) {
     if (err) return next(err);
 
-    if (!req.files || req.files.length === 0) {
+    if (!req.files || Object.keys(req.files).length === 0) {
       return next(new ServeError("No images uploaded", 400));
     }
 
-    const uploadedUrls = [];
+    const updates = {};
 
-    for (const file of req.files) {
-      const uploadToCloudinary = () =>
-        new Promise((resolve, reject) => {
-          const stream = cloudinary.uploader.upload_stream(
-            {
-              folder: `upshare/users/${req.user._id}`,
-              transformation: [{ width: 800, crop: "limit" }],
-            },
-            (error, result) => {
-              if (error) return reject(error);
-              resolve(result);
-            }
-          );
+    const uploadToCloudinary = (file, folder) =>
+      new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+          {
+            folder,
+            transformation: [{ width: 1000, crop: "limit" }],
+          },
+          (error, result) => {
+            if (error) return reject(error);
+            resolve(result.secure_url);
+          }
+        );
 
-          streamifier.createReadStream(file.buffer).pipe(stream);
-        });
+        streamifier.createReadStream(file.buffer).pipe(stream);
+      });
 
-      const result = await uploadToCloudinary();
-      uploadedUrls.push(result.secure_url);
+    // Upload profile photo if present
+    if (req.files.profilephoto) {
+      const file = req.files.profilephoto[0];
+      updates.profilephoto = await uploadToCloudinary(
+        file,
+        `upshare/users/${req.user._id}/profile`
+      );
+    }
+
+    // Upload cover photo if present
+    if (req.files.coverphoto) {
+      const file = req.files.coverphoto[0];
+      updates.coverphoto = await uploadToCloudinary(
+        file,
+        `upshare/users/${req.user._id}/cover`
+      );
     }
 
     const updatedUser = await UserModule.findByIdAndUpdate(
       req.user._id,
-      {
-        $set: {
-          profilephoto: uploadedUrls[0] || "",
-          coverphoto: uploadedUrls[1] || "",
-        },
-      },
+      { $set: updates },
       { new: true }
     );
 
     res.status(200).json({
       success: true,
       message: "Images uploaded successfully",
-      data: {
-        profilephoto: updatedUser.profilephoto,
-        coverphoto: updatedUser.coverphoto,
-      },
+      data: updatedUser,
     });
   });
 });

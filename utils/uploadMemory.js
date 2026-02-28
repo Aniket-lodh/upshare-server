@@ -24,5 +24,8 @@ export const uploadMemory = multer({
   },
 });
 
-export const uploadProfileImages = uploadMemory.array("images", 2);
+export const uploadProfileImages = uploadMemory.fields([
+  { name: "profilephoto", maxCount: 1 },
+  { name: "coverphoto", maxCount: 1 },
+]);
 export const uploadPostImage = uploadMemory.single("image");
